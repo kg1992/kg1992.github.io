@@ -1,0 +1,145 @@
+body
+{
+    margin:0px;
+}
+.calculator_page
+{
+    display:flex;    
+    text-align: center;
+    align-content: center;
+    align-self: center;
+    flex-direction: column;
+    width: 75%;
+    min-width: 740px;
+    margin-left: 10%;
+    color:#3c4043;
+}
+.header
+{
+    height:128px;
+    text-align: center;
+}
+#matrix_area
+{
+    display:flex;
+    align-items: center;
+    align-self: center;
+    flex-wrap: wrap;
+    width: 100%;
+    padding:10;
+}
+#add_widget_button
+{
+    margin-left:20px;
+    margin-top:20px;
+    border: dashed #ffffff;
+    width:64px;
+    height:64px;
+    text-align:center;
+    padding: 0;
+    justify-content: center;
+}
+.matrix_element_input
+{
+    width:32px;
+}
+.matirx_size_input
+{
+    width:32px;
+}
+.header_text
+{
+    font-size:2.5em;
+}
+.horz_border
+{
+    width: 740px;
+    border-bottom: solid 1px #3c4043;
+    align-self:center;
+}
+.matrix_selector
+{
+    align-items: center;
+    align-self: center;
+}
+.menu_theme
+{
+    display:none;
+    position: absolute;
+    background-color: #f6f6f6;
+    min-width: 100px;
+    overflow: auto;
+    border: 1px solid #ddd;
+    z-index: 1;
+}
+.menu_theme > a
+{
+  color: black;
+  padding: 6px 8px;
+  text-decoration: none;
+  display: block;
+}
+.menu_theme > a:hover
+{
+    background-color: #ddd;
+}
+.matrix_adder
+{
+    display:flex;
+    flex-direction: row;
+    align-content: center;
+}
+.widget_container
+{
+    display:flex;
+    align-items: center;
+    align-self: center;
+    margin-top: 20px;
+    margin-left: 20px;
+    background-color: #eeeeee;
+    padding:10px;   
+}
+.writer_seciton
+{
+    display:block;
+    text-align:left;
+    margin-left:20px;
+}
+.writer_section_textarea
+{
+    width:95%;
+    min-height:512px;
+    display:block;
+}
+.show
+{
+    display:block;
+}
+#matrix_display
+{
+    display:flex;
+    align-items: center;
+    align-self: center;
+    flex-wrap: wrap;
+    padding:10;
+    width: 100%;
+}
+.matrix_display_entry_middle
+{
+    width: 24px;
+    margin-left: 8px;
+    margin-right: 8px;
+    font-size: 0.8em;
+}
+.writer_seciton
+{
+    margin-top:10px;
+}
+.matrix_output
+{
+    text-align:left;
+}
+.export_button
+{
+    margin-left:10px;
+}
