@@ -19,6 +19,10 @@ body
     height:128px;
     text-align: center;
 }
+.top_button
+{
+    align-self:center;
+}
 #matrix_area
 {
     display:flex;

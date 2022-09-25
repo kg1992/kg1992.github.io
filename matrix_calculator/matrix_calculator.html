@@ -3,26 +3,29 @@
 
 <head>
     <meta charset="UTF-8">
-    <script src="./main.js"></script>
-    <link rel="stylesheet" href="./style.css">
+    <script src="./matrix_calculator.js"></script>
+    <link rel="stylesheet" href="./matrix_calculator.css">
     <link rel="shortcut icon" href="#">
-    <!-- template -->
-    <template>
-        <svg class="matrix_input_edit_name_button" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"><path d="M7.127 22.562l-7.127 1.438 1.438-7.128 5.689 5.69zm1.414-1.414l11.228-11.225-5.69-5.692-11.227 11.227 5.689 5.69zm9.768-21.148l-2.816 2.817 5.691 5.691 2.816-2.819-5.691-5.689z" /></svg>
-    </template>
     <!-- template -->
     <template id="template_matrix_input">
         <div class="matrix_input_widget widget_container">
             <div class="matrix_input_name_size">
                 <span>
                     <span class="matrix_input_name ">A</span>
-                    <svg class="matrix_input_remove_button" clip-rule="evenodd" width="16" height="16" fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"> <path d="m12 10.93 5.719-5.72c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .193-.073.385-.219.532l-5.72 5.719 5.719 5.719c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.385-.073-.531-.219l-5.719-5.719-5.719 5.719c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l5.719-5.719-5.72-5.719c-.146-.147-.219-.339-.219-.532 0-.425.346-.749.75-.749.192 0 .385.073.531.219z" /></svg>
+                    <svg class="matrix_input_remove_button" clip-rule="evenodd" width="16" height="16"
+                        fill-rule="evenodd" stroke-linejoin="round" stroke-miterlimit="2" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="m12 10.93 5.719-5.72c.146-.146.339-.219.531-.219.404 0 .75.324.75.749 0 .193-.073.385-.219.532l-5.72 5.719 5.719 5.719c.147.147.22.339.22.531 0 .427-.349.75-.75.75-.192 0-.385-.073-.531-.219l-5.719-5.719-5.719 5.719c-.146.146-.339.219-.531.219-.401 0-.75-.323-.75-.75 0-.192.073-.384.22-.531l5.719-5.719-5.72-5.719c-.146-.147-.219-.339-.219-.532 0-.425.346-.749.75-.749.192 0 .385.073.531.219z" />
+                    </svg>
                 </span>
                 <div class="matrix_input_size">
                     (
-                    <input class="matrix_input_size_rows matirx_size_input" type="number" value="2" min="1" max="256"></input>
+                    <input class="matrix_input_size_rows matirx_size_input" type="number" value="2" min="1"
+                        max="256"></input>
                     ×
-                    <input class="matrix_input_size_cols matirx_size_input" type="number" value="2" min="1" max="256"></input>
+                    <input class="matrix_input_size_cols matirx_size_input" type="number" value="2" min="1"
+                        max="256"></input>
                     )
                 </div>
             </div>
@@ -35,9 +38,22 @@
             <div class="matrix_display_entry_name"></div>
             <div class="matrix_display_entry_middle">=</div>
             <div class="matrix_output"></div>
-            <div class="export_button" href="#">
-                <svg width="16" height="16" viewBox = "0, 0, 24, 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M16 2v7h-2v-5h-12v16h12v-5h2v7h-16v-20h16zm2 9v-4l6 5-6 5v-4h-10v-2h10z"/></svg>
+            <div class="export_button">
+                <!-- <svg width="16" height="16" viewBox = "0, 0, 24, 24" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" clip-rule="evenodd"><path d="M16 2v7h-2v-5h-12v16h12v-5h2v7h-16v-20h16zm2 9v-4l6 5-6 5v-4h-10v-2h10z"/></svg> -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                    stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                </svg>
             </div>
+        </div>
+    </template>
+    <!-- template -->
+    <template id="template_number_display_entry">
+        <div class="matrix_display_entry widget_container">
+            <div class="matrix_display_entry_name"></div>
+            <div class="matrix_display_entry_middle">=</div>
+            <div class="number_output"></div>
         </div>
     </template>
 </head>
@@ -56,14 +72,22 @@
             <h1 class="header_text"> MATRIX CALCULATOR </h1>
         </div>
         <div class="horz_border"></div>
+        &nbsp;
+        <button class="top_button top_button_example">example</button>
         <div id="matrix_area">
             <button id="add_widget_button" class="widget_container" type="button">+</button>
         </div>
         <div id="matrix_display">
         </div>
+        <div id="expression_display">
+        </div>
         <div class="writer_seciton">
             <div>Expressions : </div>
             <textarea class="writer_section_textarea"></textarea>
+        </div>
+        <div class="example_section">
+            <div>Operators : = + - * / ^ ( ) { } @</div>
+            <div>Methods : determinant minors cofactors adjugate inverse</div>
         </div>
     </article>
 </body>
