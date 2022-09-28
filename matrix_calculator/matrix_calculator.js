@@ -529,7 +529,7 @@ function onLoad(event) {
             var matrix = matrices.find(m => m.name == name)
             if (matrix == null)
                 matrix = widget.targetMatrix
-            var str = '\\begin{pmatrix}'
+            var str = '\\begin{bmatrix}'
             for (var ir = 0; ir < matrix.height; ++ir) {
                 for (var ic = 0; ic < matrix.width; ++ic) {
                     var element = matrix.matrix[ir][ic]
@@ -540,7 +540,7 @@ function onLoad(event) {
                         str += '\\\\'
                 }
             }
-            str += '\\end{pmatrix}'
+            str += '\\end{bmatrix}'
             navigator.clipboard.writeText(str)
             event.preventDefault()
         }

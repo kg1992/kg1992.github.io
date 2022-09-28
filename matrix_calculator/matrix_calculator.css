@@ -34,6 +34,8 @@ body
 }
 #add_widget_button
 {
+    color:#3c4043;
+    font-size: 2em;
     margin-left:20px;
     margin-top:20px;
     border: dashed #ffffff;
@@ -42,6 +44,10 @@ body
     text-align:center;
     padding: 0;
     justify-content: center;
+}
+#add_widget_button:hover
+{
+    background-color:#cccccc;
 }
 .matrix_element_input
 {
@@ -146,4 +152,8 @@ body
 .export_button
 {
     margin-left:10px;
+}
+.export_button:hover
+{
+    background-color: #cccccc;
 }
