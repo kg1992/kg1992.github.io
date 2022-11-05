@@ -8,17 +8,120 @@ method_names = [
     'cofactors',
     'adjugate',
     'inverse',
+    'ref',
+    'rref'
 ]
+function arrayCombine(lhs, rhs, fpCombine)
+{
+    if( lhs.length != rhs.length )
+        throw `arrayCombine() : array length mismatch. lhs : ${lhs}, rhs : ${rhs}`
+    var newArray = new Array(lhs.length)
+    for( var i = 0; i < rhs.length; ++i )
+    {
+        newArray[i] = fpCombine(lhs[i], rhs[i])
+    }
+    return newArray
+}
+function arrayDiff(lhs, rhs)
+{
+    return arrayCombine(lhs, rhs, function(a, b){a - b})
+}
+function ararySum(lhs, rhs)
+{
+    return arrayCombine(lhs, rhs, function(a, b){a + b})
+}
+function arrayProduct(lhs, rhs)
+{
+    return arrayCombine(lhs, rhs, function(a, b){a * b})
+}
+function arrayQuotient(lhs, rhs)
+{
+    return arrayCombine(lhs, rhs, function(a, b){a / b})
+}
+function inplaceRowReduction(mat, rMinuend, rSubtrahend, rScale) {
+    for (var i = 0; i < mat.width; ++i) {
+        mat.matrix[rMinuend][i] -= mat.matrix[rSubtrahend][i] * rScale
+    }
+}
+function inplaceSwapRows(mat, ia, ib) {
+    var temp = mat.matrix[ia]
+    mat.matrix[ia] = mat.matrix[ib]
+    mat.matrix[ib] = temp
+}
+function FindFirstNonZeroColumnIndexInRow(row) {
+    var i = 0
+    for (i = 0; i < row.length; ++i) {
+        if (row[i] != 0) {
+            break
+        }
+    }
+    return i
+}
+// row echelon form
+function inplaceRefMatrix(mat) {
+    var r = 0
+    for (var ic = 0; ic < mat.width; ++ic) {
+        if (mat.matrix[r][ic] == 0)
+            continue
+        for (var j = r + 1; j < mat.height; ++j) {
+            if (mat.matrix[j][ic] != 0) {
+                var scale = mat.matrix[j][ic] / mat.matrix[r][ic]
+                inplaceRowReduction(mat, j, r, scale)
+            }
+        }
+        inplaceScaleRow(mat, r, 1/mat.matrix[r][ic])
+        ++r
+    }
+    for (var i = 0; i < mat.height; ++i) {
+        for (var j = i + 1; j < mat.height; ++j) {
+            var ici = FindFirstNonZeroColumnIndexInRow(mat.matrix[i])
+            var icj = FindFirstNonZeroColumnIndexInRow(mat.matrix[j])
+            if (ici > icj) {
+                inplaceSwapRows(mat, i, j)
+            }
+        }
+    }
+}
+function inplaceScaleRow(mat, row, scale) {
+    for (var i = 0; i < mat.width; ++i) {
+        mat.matrix[row][i] = mat.matrix[row][i] * scale
+    }
+}
+function inplaceRrefMatrix(mat) {
+    inplaceRefMatrix(mat)
+    for( var ir = 1; ir < mat.height; ++ir )
+    {
+        var ic = FindFirstNonZeroColumnIndexInRow(mat.matrix[ir])
+        if( ic != mat.width ){
+            for( var jr = 0; jr < ir; ++jr )
+            {
+                var scale = mat.matrix[jr][ic] / mat.matrix[ir][ic]
+                inplaceRowReduction(mat, jr, ir, scale)
+            }
+        }
+        
+    }
+}
+function refMatrix(mat) {
+    var matrix_object = cloneMatrix(mat)
+    inplaceRefMatrix(matrix_object)
+    return matrix_object
+}
+function rrefMatrix(mat) {
+    var matrix_object = cloneMatrix(mat)
+    inplaceRrefMatrix(matrix_object)
+    return matrix_object
+}
 function combineMatrices(mat1, mat2, rdiff, cdiff) {
     var br = Math.min(0, rdiff)
     var bc = Math.min(0, cdiff)
     var er = Math.max(mat1.height, mat2.height + rdiff)
     var ec = Math.max(mat1.width, mat2.width + cdiff)
-    var matrix_object = createMatrix('', er - br, ec - bc);
-    var mat1br = rdiff >= 0 ? 0 : -rdiff;
-    var mat1bc = cdiff >= 0 ? 0 : -cdiff;
-    var mat2br = rdiff >= 0 ? rdiff : 0;
-    var mat2bc = rdiff >= 0 ? cdiff : 0;
+    var matrix_object = createMatrix('', er - br, ec - bc)
+    var mat1br = rdiff >= 0 ? 0 : -rdiff
+    var mat1bc = cdiff >= 0 ? 0 : -cdiff
+    var mat2br = rdiff >= 0 ? rdiff : 0
+    var mat2bc = rdiff >= 0 ? cdiff : 0
 
     for (var ir = 0; ir < mat1.height; ++ir) {
         for (var ic = 0; ic < mat1.width; ++ic) {
@@ -31,21 +134,21 @@ function combineMatrices(mat1, mat2, rdiff, cdiff) {
         }
     }
 
-    return matrix_object;
+    return matrix_object
 }
 function getRowFromMatrix(mat, row_index) {
-    var matrix_object = createMatrix('', 1, mat.width);
+    var matrix_object = createMatrix('', 1, mat.width)
     for (var i = 0; i < mat.width; ++i) {
-        matrix_object.matrix[0][i] = mat.matrix[row_index][i];
+        matrix_object.matrix[0][i] = mat.matrix[row_index][i]
     }
-    return matrix_object;
+    return matrix_object
 }
 function getColumnFromMatrix(mat, column_index) {
-    var matrix_object = createMatrix('', mat.height, 1);
+    var matrix_object = createMatrix('', mat.height, 1)
     for (var i = 0; i < mat.height; ++i) {
-        matrix_object.matrix[i][0] = mat.matrix[i][column_index];
+        matrix_object.matrix[i][0] = mat.matrix[i][column_index]
     }
-    return matrix_object;
+    return matrix_object
 }
 function copyMatrix(dst, src) {
     dst.width = src.width
@@ -53,32 +156,32 @@ function copyMatrix(dst, src) {
     dst.matrix = JSON.parse(JSON.stringify(src.matrix))
 }
 function cloneMatrix(mat) {
-    var matrix_object = createMatrix(mat.name);
-    copyMatrix(matrix_object, mat);
+    var matrix_object = createMatrix(mat.name)
+    copyMatrix(matrix_object, mat)
     return matrix_object
 }
 function makeIdentity(size) {
-    var matrix_object = createMatrix('I', size, size);
+    var matrix_object = createMatrix('I', size, size)
     for (var ir = 0; ir < size; ++ir) {
         for (var ic = 0; ic < size; ++ic) {
-            matrix_object.matrix[ir][ic] = ir == ic ? 1 : 0;
+            matrix_object.matrix[ir][ic] = ir == ic ? 1 : 0
         }
     }
     return matrix_object
 }
 function subMatrix(mat, br, bc, er, ec) {
-    var matrix_object = createMatrix(mat.name, er - br, ec - bc);
+    var matrix_object = createMatrix(mat.name, er - br, ec - bc)
     for (var ir = br; ir < er; ++ir) {
         for (var ic = bc; ic < ec; ++ic) {
-            matrix_object.matrix[ir - br][ic - bc] = mat.matrix[ir][ic];
+            matrix_object.matrix[ir - br][ic - bc] = mat.matrix[ir][ic]
         }
     }
-    return matrix_object;
+    return matrix_object
 }
 function createMatrix(matrix_name, height = 2, width = 2) {
-    var matrix = new Array(height);
+    var matrix = new Array(height)
     for (var i = 0; i < matrix.length; ++i) {
-        matrix[i] = new Array(width).fill(0);
+        matrix[i] = new Array(width).fill(0)
     }
     return {
         name: matrix_name,
@@ -89,11 +192,11 @@ function createMatrix(matrix_name, height = 2, width = 2) {
     }; // row-major
 }
 function addMatrices(a, b) {
-    var r = a.height > b.height ? a.height : b.height;
-    var c = a.width > b.width ? a.width : b.width;
+    var r = a.height > b.height ? a.height : b.height
+    var c = a.width > b.width ? a.width : b.width
     var matrix_object = createMatrix('?', r, c)
-    reserveMatrix(a, r, c);
-    reserveMatrix(b, r, c);
+    reserveMatrix(a, r, c)
+    reserveMatrix(b, r, c)
     for (var ir = 0; ir < r; ++ir) {
         for (var ic = 0; ic < c; ++ic) {
             matrix_object.matrix[ir][ic] = a.matrix[ir][ic] + b.matrix[ir][ic]
@@ -102,11 +205,11 @@ function addMatrices(a, b) {
     return matrix_object
 }
 function subMatrices(a, b) {
-    var r = a.height > b.height ? a.height : b.height;
-    var c = a.width > b.width ? a.width : b.width;
+    var r = a.height > b.height ? a.height : b.height
+    var c = a.width > b.width ? a.width : b.width
     var matrix_object = createMatrix('?', r, c)
-    reserveMatrix(a, r, c);
-    reserveMatrix(b, r, c);
+    reserveMatrix(a, r, c)
+    reserveMatrix(b, r, c)
     for (var ir = 0; ir < r; ++ir) {
         for (var ic = 0; ic < c; ++ic) {
             matrix_object.matrix[ir][ic] = a.matrix[ir][ic] - b.matrix[ir][ic]
@@ -119,10 +222,10 @@ function multMatrices(a, b) {
     if (a == null) throw 'multMatrices() : a cannot be null'
     if (b == null) throw 'multMatrices() : b cannot be null'
     if (a.width == b.height) {
-        var matrix_object = createMatrix('', a.height, b.width);
+        var matrix_object = createMatrix('', a.height, b.width)
         for (var ir = 0; ir < a.height; ++ir) {
             for (var ic = 0; ic < b.width; ++ic) {
-                var sum = 0;
+                var sum = 0
                 for (var j = 0; j < a.width; ++j) {
                     sum += a.matrix[ir][j] * b.matrix[j][ic]
                 }
@@ -146,57 +249,57 @@ function scaleMatrix(k, mat) {
     return matrix_object
 }
 function makeMinor(mat, r, c) {
-    var matrix_object = createMatrix('', mat.height - 1, mat.width - 1);
-    var idstr = 0;
+    var matrix_object = createMatrix('', mat.height - 1, mat.width - 1)
+    var idstr = 0
     for (var ir = 0; ir < mat.height; ++ir) {
         if (ir == r) {
-            continue;
+            continue
         }
-        var idstc = 0;
+        var idstc = 0
         for (var ic = 0; ic < mat.width; ++ic) {
             if (c == ic)
                 continue
-            matrix_object.matrix[idstr][idstc++] = mat.matrix[ir][ic];
+            matrix_object.matrix[idstr][idstc++] = mat.matrix[ir][ic]
         }
-        ++idstr;
+        ++idstr
     }
-    return matrix_object;
+    return matrix_object
 }
 function makeMinors(mat) {
     if (mat.width != mat.height)
         throw 'makeMinors() : non-square matrices do not have minors'
-    var matrix_object = createMatrix('', mat.height, mat.width);
+    var matrix_object = createMatrix('', mat.height, mat.width)
     for (var ir = 0; ir < mat.height; ++ir) {
         for (var ic = 0; ic < mat.width; ++ic) {
             var minor = makeMinor(mat, ir, ic)
             matrix_object.matrix[ir][ic] = calcDeterminant(minor)
         }
     }
-    return matrix_object;
+    return matrix_object
 }
 function makeCofactors(mat) {
     if (mat.width != mat.height)
         throw 'makeCofactors() : non-square matrices do not have cofactors'
-    var matrix_object = createMatrix('', mat.height, mat.width);
+    var matrix_object = createMatrix('', mat.height, mat.width)
     for (var ir = 0; ir < mat.height; ++ir) {
-        var sign = ir % 2 == 0 ? 1 : -1;
+        var sign = ir % 2 == 0 ? 1 : -1
         for (var ic = 0; ic < mat.width; ++ic) {
             var minor = makeMinor(mat, ir, ic)
             matrix_object.matrix[ir][ic] = sign * calcDeterminant(minor)
-            sign *= -1;
+            sign *= -1
         }
     }
-    return matrix_object;
+    return matrix_object
 }
 function makeInverse(mat) {
     if (mat.width != mat.height)
         throw 'makeInverse() : non-square matrices do not have inverses'
-    var determinant = calcDeterminant(mat);
-    var epsilon = 0.000000001;
+    var determinant = calcDeterminant(mat)
+    var epsilon = 0.000000001
     if (-epsilon < determinant && determinant < epsilon)
         throw 'makeInverse() : singular matrices do not have inverses (determinant is zero)'
     var adjugate = makeTranspose(makeCofactors(mat))
-    return scaleMatrix(1 / determinant, adjugate);
+    return scaleMatrix(1 / determinant, adjugate)
 }
 function calcDeterminant(mat) {
     if (mat.width != mat.height) {
@@ -205,8 +308,8 @@ function calcDeterminant(mat) {
     if (mat.width == 1 && mat.height == 1) {
         return mat.matrix[0][0]
     }
-    var sign = 1;
-    var determinant = 0;
+    var sign = 1
+    var determinant = 0
     for (var ic = 0; ic < mat.width; ++ic) {
         var a = mat.matrix[0][ic]
         var minor = makeMinor(mat, 0, ic)
@@ -238,14 +341,14 @@ function reserveMatrix(matrix_object, rows_count, cols_count) {
     if (getMatrixColsReserve(matrix_object) < cols_count) {
         var lacks = cols_count - getMatrixColsReserve(matrix_object)
         for (var ir = 0; ir < matrix_object.matrix.length; ++ir) {
-            matrix_object.matrix[ir] = matrix_object.matrix[ir].concat(Array(lacks).fill(0));
+            matrix_object.matrix[ir] = matrix_object.matrix[ir].concat(Array(lacks).fill(0))
         }
     }
 }
 function resizeMatrix(matrix_object, rows_count, cols_count) {
-    reserveMatrix(matrix_object, rows_count, cols_count);
-    matrix_object.height = rows_count;
-    matrix_object.width = cols_count;
+    reserveMatrix(matrix_object, rows_count, cols_count)
+    matrix_object.height = rows_count
+    matrix_object.width = cols_count
 }
 function getMatrixColsReserve(matrix_object) {
     return matrix_object.matrix[0].length
@@ -254,20 +357,20 @@ function getMatrixRowsReserve(matrix_object) {
     return matrix_object.matrix.length
 }
 var fpCreateTable = (r, c, fpTdContentCreator) => {
-    var table = document.createElement('table');
-    var tbody = document.createElement('tbody');
+    var table = document.createElement('table')
+    var tbody = document.createElement('tbody')
     table.appendChild(tbody)
     for (var ir = 0; ir < r; ++ir) {
-        var tr = document.createElement('tr');
+        var tr = document.createElement('tr')
         for (var ic = 0; ic < c; ++ic) {
-            var td = document.createElement('td');
-            var element_td_content = fpTdContentCreator(ir, ic, ir * c + ic);
-            td.appendChild(element_td_content);
-            tr.appendChild(td);
+            var td = document.createElement('td')
+            var element_td_content = fpTdContentCreator(ir, ic, ir * c + ic)
+            td.appendChild(element_td_content)
+            tr.appendChild(td)
         }
-        tbody.appendChild(tr);
+        tbody.appendChild(tr)
     }
-    return table;
+    return table
 }
 function isWhitespaceChar(c) {
     if (c == undefined) return false
@@ -297,10 +400,10 @@ function markMethod(str, from) {
         var method_name = method_names[i]
         var substr = str.substr(from, method_name.length)
         if (substr == method_name) {
-            return [from, from + method_name.length, method_name, 'method'];
+            return [from, from + method_name.length, method_name, 'method']
         }
     }
-    return [from, from, null, 'method'];
+    return [from, from, null, 'method']
 }
 function markOperator(str, from) {
     if (isOperatorChar(str[from]))
@@ -311,7 +414,7 @@ function markOperator(str, from) {
 function markNumber(str, from) {
     var float_regex = /[\+\-]?((\d+(\.\d*)?)|(\.\d+))([eE][\+\-]?\d*)?/g
     float_regex.lastIndex = from
-    var ary = float_regex.exec(str);
+    var ary = float_regex.exec(str)
     if (ary == null || ary.index != from) {
         return [from, from, NaN, 'number']
     }
@@ -323,7 +426,7 @@ function markNumber(str, from) {
     return [from, from + ary[0].length, number, 'number']
 }
 function markSomething(str, from) {
-    var mark;
+    var mark
     mark = markWhitespace(str, from)
     if (mark[0] != mark[1])
         return mark
@@ -343,7 +446,7 @@ function markSomething(str, from) {
 }
 function markAll(str) {
     if (str == null)
-        return null;
+        return null
     i = 0
     marks = []
     while (i != str.length) {
@@ -369,7 +472,7 @@ function onLoad(event) {
             recalcMatrix()
         }
     })
-    loadFromState(loadStateFromLocalStorage());
+    loadFromState(loadStateFromLocalStorage())
     function evalStatement(marks) {
         if (marks == null) throw 'evalStatement() : marks cannot be null'
         nodes = marks.filter(mark => mark[3] != 'whitespace').map(mark => {
@@ -393,8 +496,8 @@ function onLoad(event) {
     function renewMatrixList(marks) {
         var marks = marks.filter(mark => mark[3] == 'name')
         for (var i = 0; i < marks.length; ++i) {
-            var mark = marks[i];
-            var name = mark[2];
+            var mark = marks[i]
+            var name = mark[2]
             var mo = matrices.findIndex(m => m.name == name)
             if (mo == -1) {
                 matrices.push(createMatrix(name))
@@ -403,20 +506,20 @@ function onLoad(event) {
         for (var i = matrices.length - 1; i >= 0; --i) {
             var mo = matrices[i]
             if (marks.findIndex(mark => mark.name == mo.name) == -1 && !mo.input_node) {
-                matrices.splice(i, 1);
+                matrices.splice(i, 1)
             }
         }
     }
     function evalScript() {
         str = element_writer_section_textarea.value // something like '   C = A + B   ...'
         if (str == '')
-            return;
+            return
         var marks = markAll(str)
         renewMatrixList(marks)
         var statements = divideStatements(marks)
-        var results = statements.map(statement => evalStatement(statement));
+        var results = statements.map(statement => evalStatement(statement))
         element_matrix_display.innerText = ''
-        displayResults(statements, results);
+        displayResults(statements, results)
     }
     function recalcMatrix() {
         evalScript()
@@ -425,12 +528,12 @@ function onLoad(event) {
             var name = updates[i].getAttribute("matrix_name")
             var mat = findMatrixObjectByName(name)
             if (mat == null)
-                continue;
+                continue
             var table = fpCreateTable(mat.height, mat.width, (ir, ic, i) => {
-                var label = document.createElement('span');
-                var element = mat.matrix[ir][ic];
-                label.innerHTML = element;
-                return label;
+                var label = document.createElement('span')
+                var element = mat.matrix[ir][ic]
+                label.innerHTML = element
+                return label
             })
             updates[i].innerHTML = ""
             updates[i].appendChild(table)
@@ -438,12 +541,12 @@ function onLoad(event) {
         saveStateToLocalStorage()
     }
     function createMatrixInputNode(ir, ic, i, matrix_object) {
-        var input = document.createElement('input');
-        input.setAttribute('type', 'number');
+        var input = document.createElement('input')
+        input.setAttribute('type', 'number')
         input.addEventListener('input', () => {
             matrix_object.matrix[ir][ic] = input.valueAsNumber
             recalcMatrix()
-        });
+        })
         input.classList.add('matrix_element_input')
         input.value = matrix_object.matrix[ir][ic]
         return input
@@ -457,7 +560,7 @@ function onLoad(event) {
         resizeMatrix(matrix_object, rows_count, cols_count)
         var table = fpCreateTable(rows_count, cols_count, (ir, ic, i) => {
             var node = createMatrixInputNode(ir, ic, i, matrix_object)
-            return node;
+            return node
         })
         table.classList.add('matrix_input_element_table')
         element_input_matrix_input_elements.innerHTML = ""
@@ -469,7 +572,7 @@ function onLoad(event) {
         div.appendChild(template_matrix_input.content.cloneNode(true))
         var widget = div.children[0]
         widget.getElementsByClassName('matrix_input_remove_button')[0].addEventListener('click', () => {
-            matrices.splice(matrices.indexOf(matrix_object), 1);
+            matrices.splice(matrices.indexOf(matrix_object), 1)
             widget.parentElement.removeChild(widget)
         })
         widget.getElementsByClassName('matrix_input_name')[0].textContent = matrix_object.name
@@ -481,7 +584,7 @@ function onLoad(event) {
             establishMatrixInput(widget, matrix_object)
             recalcMatrix()
         })
-        element_input_size_cols.value = matrix_object.width;
+        element_input_size_cols.value = matrix_object.width
         element_input_size_cols.addEventListener('input', () => {
             matrix_object.width = element_input_size_cols.valueAsNumber
             establishMatrixInput(widget, matrix_object)
@@ -498,22 +601,22 @@ function onLoad(event) {
         }
         else {
             if (element_menu_exporter.classList.contains('show')) {
-                element_menu_exporter.classList.remove('show');
+                element_menu_exporter.classList.remove('show')
             }
         }
         if (event.target.matches('#a_json_row_major')) {
-            var widget = event.target.parentElement.parentElement.parentElement;
+            var widget = event.target.parentElement.parentElement.parentElement
             var element_matrix_output = widget.getElementsByClassName('matrix_output')[0]
             var name = element_matrix_output.getAttribute("matrix_name")
             var matrix = matrices.find(m => m.name == name)
             if (matrix == null)
                 matrix = widget.targetMatrix
-            var to_stringify = subMatrix(matrix, 0, 0, matrix.height, matrix.width);
+            var to_stringify = subMatrix(matrix, 0, 0, matrix.height, matrix.width)
             navigator.clipboard.writeText(JSON.stringify(to_stringify.matrix))
             event.preventDefault()
         }
         if (event.target.matches('#a_json_col_major')) {
-            var widget = element_menu_exporter.parentElement.parentElement;
+            var widget = element_menu_exporter.parentElement.parentElement
             var element_matrix_output = widget.getElementsByClassName('matrix_output')[0]
             var name = element_matrix_output.getAttribute("matrix_name")
             var matrix = matrices.find(m => m.name == name)
@@ -523,7 +626,7 @@ function onLoad(event) {
             event.preventDefault()
         }
         if (event.target.matches('#a_katex')) {
-            var widget = element_menu_exporter.parentElement.parentElement;
+            var widget = element_menu_exporter.parentElement.parentElement
             var element_matrix_output = widget.getElementsByClassName('matrix_output')[0]
             var name = element_matrix_output.getAttribute("matrix_name")
             var matrix = matrices.find(m => m.name == name)
@@ -545,7 +648,7 @@ function onLoad(event) {
             event.preventDefault()
         }
         if (event.target.matches('#a_c_row_major')) {
-            var widget = element_menu_exporter.parentElement.parentElement;
+            var widget = element_menu_exporter.parentElement.parentElement
             var element_matrix_output = widget.getElementsByClassName('matrix_output')[0]
             var name = element_matrix_output.getAttribute("matrix_name")
             var matrix = matrices.find(m => m.name == name)
@@ -556,7 +659,7 @@ function onLoad(event) {
             event.preventDefault()
         }
         if (event.target.matches('#a_c_col_major')) {
-            var widget = element_menu_exporter.parentElement.parentElement;
+            var widget = element_menu_exporter.parentElement.parentElement
             var element_matrix_output = widget.getElementsByClassName('matrix_output')[0]
             var name = element_matrix_output.getAttribute("matrix_name")
             var matrix = makeTranspose(matrices.find(m => m.name == name))
@@ -570,13 +673,13 @@ function onLoad(event) {
             var names = matrices.map(matrix_object => matrix_object.name)
 
             function nextChar(char) {
-                if (char == 'H') return 'J';
-                if (char == 'N') return 'P';
-                return String.fromCharCode(char.charCodeAt(0) + 1);
+                if (char == 'H') return 'J'
+                if (char == 'N') return 'P'
+                return String.fromCharCode(char.charCodeAt(0) + 1)
             }
             function nextName(name) {
                 var new_name_ary = []
-                var carry = 1;
+                var carry = 1
                 for (var i = name.length - 1; i >= 0; --i) {
                     if (carry == 0) {
                         new_name_ary.push(name[i])
@@ -588,7 +691,7 @@ function onLoad(event) {
                         }
                         else {
                             carry = 0
-                            new_name_ary.push(nextChar(name[i]));
+                            new_name_ary.push(nextChar(name[i]))
                         }
                     }
                 }
@@ -597,9 +700,9 @@ function onLoad(event) {
                 }
                 return new_name_ary.reverse().join('')
             }
-            var new_name = 'A';
+            var new_name = 'A'
             while (names.indexOf(new_name) != -1) {
-                new_name = nextName(new_name);
+                new_name = nextName(new_name)
             }
             var matrix_object = createMatrix(new_name)
             matrices.push(matrix_object)
@@ -608,20 +711,19 @@ function onLoad(event) {
         }
         if (event.target.matches('.top_button_example')) {
             for (var i = 0; i < matrices.length; ++i) {
-                var input_node = matrices[i].input_node;
-                if( input_node )
-                {
-                    input_node.parentElement.removeChild(input_node);
+                var input_node = matrices[i].input_node
+                if (input_node) {
+                    input_node.parentElement.removeChild(input_node)
                 }
             }
-            matrices.splice(0, matrices.length);
+            matrices.splice(0, matrices.length)
 
             var sstate = {
                 "matrices": "[{\"name\":\"A\",\"type\":\"matrix\",\"width\":3,\"height\":3,\"matrix\":[[3,0,2,0],[2,5,5,3],[0,1,1,3],[5,-18,1,0]],\"input_node\":{}},{\"name\":\"B\",\"type\":\"matrix\",\"height\":3,\"width\":3,\"matrix\":[[1,2,3],[4,5,6],[7,8,9]],\"input_node\":{}},{\"name\":\"C\",\"type\":\"matrix\",\"height\":2,\"width\":2,\"matrix\":[[1,2,0],[3,4,0],[0,0,0]],\"input_node\":{}},{\"name\":\"D\",\"type\":\"matrix\",\"height\":3,\"width\":3,\"matrix\":[[1,1,1],[1,1,1],[1,1,2]],\"input_node\":{}}]",
                 "expressions": "A{0};\nA(0);\ntranspose(A);\ntranspose({1,2,3});\n\ninverse(A);\nminors(A);\ncofactors(A);\ninverse(A);\n\nA(0,0);\nA(2,0);\nA(1,2);\n(1,2,3);\n{1,2,3};\n{(1,2,3),(4,5,6),(7,8,9)};\n({1,2,3},{4,5,6},{7,8,9});\n({(1,2,3),(4,5,6),(7,8,9)},({1,2,3},{4,5,6},{7,8,9}));\n\nC@D;\nD@C;\n"
             }
             loadFromState(sstate)
-            recalcMatrix();
+            recalcMatrix()
         }
     }
     function divideStatements(marks) {
@@ -632,7 +734,7 @@ function onLoad(event) {
             if (mark[2] == ';') {
                 statements.push(statement)
                 statement = []
-                continue;
+                continue
             }
             else {
                 statement.push(marks[i])
@@ -642,12 +744,12 @@ function onLoad(event) {
     }
     function treeficate(nodes) {
         var to_fold = []
-        var depth = 0;
+        var depth = 0
         for (var i = 0; i < nodes.length; ++i) {
             var node = nodes[i]
-            // console.log(node.mark, depth);
+            // console.log(node.mark, depth)
             if (node.mark[2] == '(' || node.mark[2] == '[' || node.mark[2] == '{') {
-                ++depth;
+                ++depth
                 to_fold.push({
                     node: node,
                     depth: depth
@@ -658,7 +760,7 @@ function onLoad(event) {
                     node: node,
                     depth: depth
                 })
-                --depth;
+                --depth
             }
             else if (node.mark[3] == 'method') {
                 to_fold.push({
@@ -698,7 +800,7 @@ function onLoad(event) {
             '@': 5,
             '^': 6,
             'method': 7,
-        };
+        }
         fpHash = function (a) {
             var str = a.node.mark[2]
             var type = a.node.mark[3]
@@ -713,34 +815,34 @@ function onLoad(event) {
         to_fold.sort((a, b) => {
             return fpHash(a) - fpHash(b)
         })
-        // console.log(to_fold);
-        var close_bracket_queue = [];
+        // console.log(to_fold)
+        var close_bracket_queue = []
         for (var d = to_fold.length - 1; d >= 0; --d) {
             var fold = to_fold[d]
             var opnode = fold.node
             var index = nodes.indexOf(opnode)
             if (opnode.mark[3] == 'operator') {
                 if (opnode.mark[2] == '=' || opnode.mark[2] == '+' || opnode.mark[2] == '-' || opnode.mark[2] == '*' || opnode.mark[2] == '/' || opnode.mark[2] == '@' || opnode.mark[2] == '^' || opnode.mark[2] == ',') {
-                    opnode.r = nodes.splice(index + 1, 1)[0];
-                    opnode.l = nodes.splice(index - 1, 1)[0];
+                    opnode.r = nodes.splice(index + 1, 1)[0]
+                    opnode.l = nodes.splice(index - 1, 1)[0]
                 }
                 else if (opnode.mark[2] == ']') {
-                    close_bracket_queue.push(opnode);
-                    nodes.splice(index, 1);
-                    opnode.l = nodes.splice(index - 1, 1)[0];
+                    close_bracket_queue.push(opnode)
+                    nodes.splice(index, 1)
+                    opnode.l = nodes.splice(index - 1, 1)[0]
                 }
                 else if (opnode.mark[2] == '[') {
-                    opnode.l = nodes.splice(index - 1, 1)[0];
+                    opnode.l = nodes.splice(index - 1, 1)[0]
                     opnode.r = close_bracket_queue.splice(0, 1)[0]
                 }
                 else if (opnode.mark[2] == ')') {
-                    close_bracket_queue.push(opnode);
-                    nodes.splice(index, 1);
-                    opnode.l = nodes.splice(index - 1, 1)[0];
+                    close_bracket_queue.push(opnode)
+                    nodes.splice(index, 1)
+                    opnode.l = nodes.splice(index - 1, 1)[0]
                 }
                 else if (opnode.mark[2] == '(') {
                     if (index > 0 && nodes[index - 1].mark[3] == 'name') {
-                        opnode.l = nodes.splice(index - 1, 1)[0];
+                        opnode.l = nodes.splice(index - 1, 1)[0]
                         opnode.r = close_bracket_queue.splice(0, 1)[0]
                     }
                     else {
@@ -748,13 +850,13 @@ function onLoad(event) {
                     }
                 }
                 else if (opnode.mark[2] == '}') {
-                    close_bracket_queue.push(opnode);
-                    nodes.splice(index, 1);
-                    opnode.l = nodes.splice(index - 1, 1)[0];
+                    close_bracket_queue.push(opnode)
+                    nodes.splice(index, 1)
+                    opnode.l = nodes.splice(index - 1, 1)[0]
                 }
                 else if (opnode.mark[2] == '{') {
                     if (index > 0 && nodes[index - 1].mark[3] == 'name') {
-                        opnode.l = nodes.splice(index - 1, 1)[0];
+                        opnode.l = nodes.splice(index - 1, 1)[0]
                         opnode.r = close_bracket_queue.splice(0, 1)[0]
                     }
                     else {
@@ -763,10 +865,10 @@ function onLoad(event) {
                 }
             }
             else if (opnode.mark[3] == 'method') {
-                opnode.r = nodes.splice(index + 1, 1)[0];
+                opnode.r = nodes.splice(index + 1, 1)[0]
             }
             else if (opnode.mark[3] == 'name') {
-                opnode.r = nodes.splice(index + 1, 1)[0];
+                opnode.r = nodes.splice(index + 1, 1)[0]
             }
         }
         return nodes[0]
@@ -805,12 +907,12 @@ function onLoad(event) {
             else if (le.val_type == 'matrix' && re.val_type == 'columns') {
                 if (le.val.input_node != null)
                     throw 'evalNode() : cannot assign to predefined matrix'
-                var height = re.val[0].length;
-                var width = re.val.length;
-                resizeMatrix(le.val, height, width);
+                var height = re.val[0].length
+                var width = re.val.length
+                resizeMatrix(le.val, height, width)
                 for (var ir = 0; ir < height; ++ir) {
                     for (var ic = 0; ic < width; ++ic) {
-                        le.val.matrix[ir][ic] = re.val[ic][ir];
+                        le.val.matrix[ir][ic] = re.val[ic][ir]
                     }
                 }
                 return {
@@ -822,9 +924,9 @@ function onLoad(event) {
             else if (le.val_type == 'matrix' && re.val_type == 'row') {
                 if (le.val.input_node != null)
                     throw 'evalNode() : cannot assign to predefined matrix'
-                le.val.matrix = [re.val];
+                le.val.matrix = [re.val]
                 le.val.height = 1
-                le.val.width = re.val.length;
+                le.val.width = re.val.length
                 return {
                     val_type: 'matrix',
                     val: le.val,
@@ -949,13 +1051,13 @@ function onLoad(event) {
             var le = evalNode(node.l)
             var re = evalNode(node.r)
             if (le.val_type == 'matrix' && re.val_type == 'matrix') {
-                var lhs = le.val;
-                var rhs = re.val;
-                var matrix_object = createMatrix('');
+                var lhs = le.val
+                var rhs = re.val
+                var matrix_object = createMatrix('')
                 for (var ir = 0; ir < lhs.height; ++ir) {
                     for (var ic = 0; ic < lhs.width; ++ic) {
                         var scaled = scaleMatrix(lhs.matrix[ir][ic], rhs)
-                        matrix_object = combineMatrices(matrix_object, scaled, ir * rhs.height, ic * rhs.width);
+                        matrix_object = combineMatrices(matrix_object, scaled, ir * rhs.height, ic * rhs.width)
                     }
                 }
                 return {
@@ -977,9 +1079,9 @@ function onLoad(event) {
             else if (le.val_type == 'matrix' && re.val_type == 'number') {
                 if (le.val.width != le.val.height)
                     throw `evalNode() : syntax_error. cannot take powers of non-square matrices. size is (${le.val.height}x${le.val.width})`
-                var m = makeIdentity(le.val.height);
+                var m = makeIdentity(le.val.height)
                 for (var i = 0; i < re.val; ++i) {
-                    m = multMatrices(m, le.val);
+                    m = multMatrices(m, le.val)
                 }
                 return {
                     val_type: 'matrix',
@@ -997,8 +1099,8 @@ function onLoad(event) {
         }
         else if (node.mark[2] == '(') {
             if (node.l != null && node.l.mark[3] == 'name') {
-                var le = evalNode(node.l);
-                var re = evalNode(node.r);
+                var le = evalNode(node.l)
+                var re = evalNode(node.r)
                 if (le.val_type == 'matrix', re.val_type == 'number') {
                     return {
                         val_type: 'matrix',
@@ -1015,7 +1117,7 @@ function onLoad(event) {
                 }
             }
             else if (node.l == null) {
-                var re = evalNode(node.r);
+                var re = evalNode(node.r)
                 if (re.val_type == 'number') {
                     return {
                         val_type: 'number',
@@ -1024,9 +1126,9 @@ function onLoad(event) {
                     }
                 }
                 else if (re.val_type == 'numbers') {
-                    var mat = createMatrix('', re.val.length, 1);
+                    var mat = createMatrix('', re.val.length, 1)
                     for (var i = 0; i < re.val.length; ++i) {
-                        mat.matrix[i][0] = re.val[i];
+                        mat.matrix[i][0] = re.val[i]
                     }
                     return {
                         val_type: 'matrix',
@@ -1042,25 +1144,25 @@ function onLoad(event) {
                     }
                 }
                 else if (re.val_type == 'matrices') {
-                    var height = 0;
-                    var width = 0;
+                    var height = 0
+                    var width = 0
                     for (var i = 0; i < re.val.length; ++i) {
-                        var mat = re.val[i];
-                        width = mat.width > width ? mat.width : width;
-                        height = height + mat.height;
+                        var mat = re.val[i]
+                        width = mat.width > width ? mat.width : width
+                        height = height + mat.height
                     }
-                    var matrix_object = createMatrix('', height, width);
-                    var br = 0;
+                    var matrix_object = createMatrix('', height, width)
+                    var br = 0
                     for (var i = 0; i < re.val.length; ++i) {
-                        var mat = re.val[i];
-                        var er = br + mat.height;
-                        var ec = matrix_object.width;
+                        var mat = re.val[i]
+                        var er = br + mat.height
+                        var ec = matrix_object.width
                         for (var ir = br; ir < er; ++ir) {
                             for (var ic = 0; ic < ec; ++ic) {
-                                matrix_object.matrix[ir][ic] = mat.matrix[ir - br][ic];
+                                matrix_object.matrix[ir][ic] = mat.matrix[ir - br][ic]
                             }
                         }
-                        br = er;
+                        br = er
                     }
                     return {
                         val_type: 'matrix',
@@ -1077,25 +1179,25 @@ function onLoad(event) {
                 }
             }
             else if (re.val_type == 'matrices') {
-                var height = 0;
-                var width = 0;
+                var height = 0
+                var width = 0
                 for (var i = 0; i < re.val.length; ++i) {
-                    var mat = re.val[i];
-                    height = mat.height > height ? mat.height : height;
-                    width = width + mat.width;
+                    var mat = re.val[i]
+                    height = mat.height > height ? mat.height : height
+                    width = width + mat.width
                 }
-                var matrix_object = createMatrix('', height, width);
-                var bc = 0;
+                var matrix_object = createMatrix('', height, width)
+                var bc = 0
                 for (var i = 0; i < re.val.length; ++i) {
-                    var mat = re.val[i];
-                    var er = mat.height;
-                    var ec = bc + mat.width;
+                    var mat = re.val[i]
+                    var er = mat.height
+                    var ec = bc + mat.width
                     for (var ir = 0; ir < er; ++ir) {
                         for (var ic = bc; ic < ec; ++ic) {
-                            matrix_object.matrix[ir][ic] = mat.matrix[ir][ic - bc];
+                            matrix_object.matrix[ir][ic] = mat.matrix[ir][ic - bc]
                         }
                     }
-                    bc = ec;
+                    bc = ec
                 }
                 return {
                     val_type: 'matrix',
@@ -1105,13 +1207,13 @@ function onLoad(event) {
             }
         }
         else if (node.mark[2] == ')') {
-            return evalNode(node.l);
+            return evalNode(node.l)
         }
         else if (node.mark[2] == '{') {
             if (node.l) {
                 if (node.l.mark[3] == 'name') {
-                    var le = evalNode(node.l);
-                    var re = evalNode(node.r);
+                    var le = evalNode(node.l)
+                    var re = evalNode(node.r)
                     if (le.val_type == 'matrix', re.val_type == 'number') {
                         return {
                             val_type: 'matrix',
@@ -1121,7 +1223,7 @@ function onLoad(event) {
                     }
                 }
             } else {
-                var re = evalNode(node.r);
+                var re = evalNode(node.r)
                 if (re.val_type == 'number') {
                     return {
                         val_type: 'number',
@@ -1130,9 +1232,9 @@ function onLoad(event) {
                     }
                 }
                 else if (re.val_type == 'numbers') {
-                    var mat = createMatrix('', 1, re.val.length);
+                    var mat = createMatrix('', 1, re.val.length)
                     for (var i = 0; i < re.val.length; ++i) {
-                        mat.matrix[0][i] = re.val[i];
+                        mat.matrix[0][i] = re.val[i]
                     }
                     return {
                         val_type: 'matrix',
@@ -1148,25 +1250,25 @@ function onLoad(event) {
                     }
                 }
                 else if (re.val_type == 'matrices') {
-                    var height = 0;
-                    var width = 0;
+                    var height = 0
+                    var width = 0
                     for (var i = 0; i < re.val.length; ++i) {
                         var mat = re.val[i]
                         height = mat.height > height ? mat.height : height
                         width = width + mat.width
                     }
-                    var matrix_object = createMatrix('', height, width);
-                    var bc = 0;
+                    var matrix_object = createMatrix('', height, width)
+                    var bc = 0
                     for (var i = 0; i < re.val.length; ++i) {
-                        var mat = re.val[i];
-                        var er = mat.height;
-                        var ec = bc + mat.width;
+                        var mat = re.val[i]
+                        var er = mat.height
+                        var ec = bc + mat.width
                         for (var ir = 0; ir < er; ++ir) {
                             for (var ic = bc; ic < ec; ++ic) {
-                                matrix_object.matrix[ir][ic] = mat.matrix[ir][ic - bc];
+                                matrix_object.matrix[ir][ic] = mat.matrix[ir][ic - bc]
                             }
                         }
-                        bc = ec;
+                        bc = ec
                     }
                     return {
                         val_type: 'matrix',
@@ -1177,7 +1279,7 @@ function onLoad(event) {
             }
         }
         else if (node.mark[2] == '}') {
-            return evalNode(node.l);
+            return evalNode(node.l)
         }
         else if (node.mark[2] == ',') {
             var le = evalNode(node.l)
@@ -1225,10 +1327,10 @@ function onLoad(event) {
             }
         }
         else if (node.mark[3] == 'name' && node.r) {
-            var re = evalNode(node.r);
+            var re = evalNode(node.r)
             if (re.val_type == 'number') {
                 var name = node.mark[2]
-                var mat = findMatrixObjectByName(name);
+                var mat = findMatrixObjectByName(name)
                 if (mat == null) {
                     mat = createMatrix(name)
                     matrices.push(mat)
@@ -1307,6 +1409,26 @@ function onLoad(event) {
                 }
             }
         }
+        else if (node.mark[3] == 'method' && node.mark[2] == 'ref') {
+            var re = evalNode(node.r)
+            if (re.val_type == 'matrix') {
+                return {
+                    val_type: 'matrix',
+                    val: refMatrix(re.val),
+                    node: node
+                }
+            }
+        }
+        else if (node.mark[3] == 'method' && node.mark[2] == 'rref') {
+            var re = evalNode(node.r)
+            if (re.val_type == 'matrix') {
+                return {
+                    val_type: 'matrix',
+                    val: rrefMatrix(re.val),
+                    node: node
+                }
+            }
+        }
 
         throw 'unhandled syntax error'
     }
@@ -1314,14 +1436,14 @@ function onLoad(event) {
         for (var i = 0; i < results.length; ++i) {
             var statement = statements[i]
             if (statement.length == 0)
-                continue;
+                continue
             var result = results[i]
             if (result == null)
-                continue;
+                continue
             var val = result.val
             var val_type = result.val_type
             if (val_type == 'empty')
-                continue;
+                continue
             if (result.node.mark[2] == '=' && val_type == 'matrix') {
                 var widget = createDisplayMatrixWidget(val.name, val)
                 element_matrix_display.appendChild(widget)
@@ -1345,15 +1467,15 @@ function onLoad(event) {
         var element_matrix_output = div.getElementsByClassName('matrix_output')[0]
         div.getElementsByClassName('matrix_display_entry_name')
         var table = fpCreateTable(mat.height, mat.width, (ir, ic, i) => {
-            var label = document.createElement('label');
-            label.innerHTML = mat.matrix[ir][ic];
-            return label;
+            var label = document.createElement('label')
+            label.innerHTML = mat.matrix[ir][ic]
+            return label
         })
         element_matrix_output.classList.add('update_table_on_recalc')
         element_matrix_output.setAttribute('matrix_name', name)
         element_matrix_display_entry_name.innerText = name
         element_matrix_output.appendChild(table)
-        div.children[0].targetMatrix = mat;
+        div.children[0].targetMatrix = mat
         return div.children[0]
     }
     function createDisplayNumberWidget(name, number) {
@@ -1362,8 +1484,8 @@ function onLoad(event) {
         div.appendChild(cloned)
         var element_matrix_display_entry_name = div.getElementsByClassName('matrix_display_entry_name')[0]
         var element_number_output = div.getElementsByClassName('number_output')[0]
-        element_matrix_display_entry_name.innerText = name;
-        element_number_output.innerText = number;
+        element_matrix_display_entry_name.innerText = name
+        element_number_output.innerText = number
         return div.children[0]
     }
     function serializeState() {
@@ -1372,7 +1494,7 @@ function onLoad(event) {
             expressions: element_writer_section_textarea.value
         }
     }
-    window.serializeState = serializeState;
+    window.serializeState = serializeState
     // state : object returend by serializeState
     function loadFromState(state) {
         if (state.matrices) {
@@ -1382,13 +1504,13 @@ function onLoad(event) {
             }
         }
         if (state.expressions) {
-            element_writer_section_textarea.value = state.expressions;
+            element_writer_section_textarea.value = state.expressions
         }
     }
     function saveStateToLocalStorage() {
-        var state = serializeState();
-        window.localStorage.setItem('matrices', state.matrices);
-        window.localStorage.setItem('expressions', state.expressions);
+        var state = serializeState()
+        window.localStorage.setItem('matrices', state.matrices)
+        window.localStorage.setItem('expressions', state.expressions)
     }
     function loadStateFromLocalStorage() {
         return {
